@@ -1,16 +1,33 @@
-# This is a sample Python script.
+from fastapi import FastAPI
+import uvicorn
+from apps.account import models
+from services.sql_app.database import SessionLocal, engine
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-# Press the green button in the gutter to run the script.
+@app.get('/test')
+def test():
+    return 'HI !'
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print("Starting Application...")
+    uvicorn.run(
+        app='main:app',
+        host='0.0.0.0',
+        port=8808,
+        workers=1,
+        log_level='info'
+    )

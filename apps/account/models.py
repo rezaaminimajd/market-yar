@@ -1,6 +1,13 @@
+from enum import Enum
 from sqlalchemy import Column, Integer, String, ForeignKey
-
 from services.sql_app.database import Base
+from sqlalchemy.dialects.postgresql import ENUM
+
+
+class UserType(Enum):
+    NORMAL = 'NORMAL'
+    ADMIN = 'ADMIN'
+    BOSS = 'BOSS'
 
 
 class User(Base):
@@ -10,6 +17,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     nickname = Column(String)
     hashed_password = Column(String)
+    user_type = Column(ENUM(UserType), nullable=False)
 
 
 class UserLoginToken(Base):
