@@ -1,25 +1,13 @@
 from fastapi import FastAPI
 import uvicorn
-from apps.account import models
-from services.sql_app.database import SessionLocal, engine
+from apps.account import models, view
+from services.sql_app.database import engine
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@app.get('/test')
-def test():
-    return 'HI !'
+app.include_router(view.router)
 
 
 if __name__ == '__main__':
