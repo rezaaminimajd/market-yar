@@ -22,7 +22,7 @@ def create_user(db: Session, user: schemas.RegisterUser):
 
 
 def get_user(db: Session, username: str, password: str):
-    return db.query(models.User).filter(models.User.username == username and models.User.password == password).first()
+    return db.query(models.User).filter(models.User.username == username, models.User.password == password).first()
 
 
 
@@ -82,11 +82,32 @@ def comments(db: Session, video_id: int):
 
 
 def likes(db: Session, video_id: int):
-    return db.query(models.Like).filter(models.Like.is_like and models.Like.video_id == video_id).all()
+    return db.query(models.Like).filter(models.Like.is_like, models.Like.video_id == video_id).all()
+
+
+def get_like(db: Session, video_id: int, user_id: int):
+    return db.query(models.Like).filter(
+        models.Like.is_like, models.Like.video_id == video_id, models.Like.user_id == user_id
+    ).first()
 
 
 def dislikes(db: Session, video_id: int):
-    return db.query(models.Like).filter(not models.Like.is_like and models.Like.video_id == video_id).all()
+    return db.query(models.Like).filter(models.Like.is_like != True, models.Like.video_id == video_id).all()
+
+
+def get_dislike(db: Session, video_id: int, user_id: int):
+    return db.query(models.Like).filter(
+        models.Like.is_like != True, models.Like.video_id == video_id, models.Like.user_id == user_id
+    ).first()
+
+
+def get_like_or_dislike(db: Session, video_id: int, user_id: int):
+    return db.query(models.Like).filter(models.Like.video_id == video_id, models.Like.user_id == user_id).first()
+
+
+def delete_like(db: Session, like: models.Like):
+    db.delete(like)
+    db.commit()
 
 
 def add_comment(db: Session, comment: schemas.Comment, user_id: int):
