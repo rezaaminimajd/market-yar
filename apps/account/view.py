@@ -73,6 +73,12 @@ def add_comment(token: str, comment: schemas.Comment, db=Depends(get_db)):
 def add_like(token: str, like: schemas.Like, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for like or dislike, login first")
+    lod = crud.get_like_or_dislike(db, like.video_id, crud.get_token(db, token).user_id)
+    if lod:
+        if lod.is_like == like.is_like:
+            return 'you can not like/dislike twice!'
+        else:
+            crud.delete_like(db, lod)
     crud.add_like(db, like, crud.get_token(db, token).user_id)
     return 'like added!'
 
