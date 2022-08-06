@@ -3,7 +3,7 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from services.sql_app.database import get_db
-from . import schemas, crud
+from . import schemas, crud, models
 
 router = APIRouter(
     prefix='/account',
@@ -18,6 +18,33 @@ def register(user: schemas.RegisterUser, db=Depends(get_db)):
         raise HTTPException(status_code=400, detail="user already registered")
     crud.create_user(db, user)
     return 'user created'
+
+
+@router.get('/inactive-admins')
+def inactives_addmins(token: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="first login")
+    if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
+        raise HTTPException(status_code=401, detail="your not boss")
+    return crud.get_inactive_admins(db)
+
+
+@router.post('/active-admin/{admin_id}')
+def activate_admin(admin_id: int, token: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="first login")
+    if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
+        raise HTTPException(status_code=401, detail="your not boss")
+    crud.activate_user(db, admin_id)
+
+
+@router.post('/active-user/{user_id}')
+def activate_user(user_id: int, token: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="first login")
+    if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
+        raise HTTPException(status_code=401, detail="your not admin")
+    crud.activate_user(db, user_id)
 
 
 @router.post('/login')
@@ -97,3 +124,18 @@ async def upload_file(token: str, file: UploadFile, db=Depends(get_db)):
     )
     crud.upload_video(db, v)
     return f'file {file.filename} uploaded!'
+
+
+@router.post("/inactivate/video/{video_id}")
+def inactivate_video(token: str, video_id: int, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="first login")
+    if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
+        raise HTTPException(status_code=401, detail="your not admin")
+
+
+def create_superuser():
+    crud.create_boss(next(get_db()))
+
+
+create_superuser()
