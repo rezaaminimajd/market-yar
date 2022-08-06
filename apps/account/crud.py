@@ -1,5 +1,8 @@
+from pyexpat import model
+from unittest import mock
 from sqlalchemy.orm import Session
 from uuid import uuid4
+from sqlalchemy import desc
 
 from . import models, schemas
 
@@ -20,6 +23,7 @@ def create_user(db: Session, user: schemas.RegisterUser):
 
 def get_user(db: Session, username: str, password: str):
     return db.query(models.User).filter(models.User.username == username and models.User.password == password).first()
+
 
 
 def get_token(db: Session, token: str):
@@ -47,6 +51,21 @@ def is_user(db: Session, token: str):
     else:
         return False
 
+def check_type(db: Session, user_id: int, type: models.UserType):
+    user = db.query(models.User).filter(models.User.id == user_id).one()
+    if user.user_type == type:
+        return True
+    return False
+
+def get_inactive_admins(db: Session):
+    admins = db.query(models.User).filter(models.User.user_type == models.UserType.ADMIN and models.User.is_active == False).all()
+    return admins
+    
+def activate_user(db: Session, user_id: int):
+    db.query(models.User).filter(models.User.id == user_id).update({models.User.is_active: True})
+    db.commit()
+    
+
 
 def logout(db: Session, user_logout_token: models.UserLoginToken):
     db.delete(user_logout_token)
@@ -55,7 +74,7 @@ def logout(db: Session, user_logout_token: models.UserLoginToken):
 
 
 def videos(db: Session):
-    return db.query(models.Video).all()
+    return db.query(models.Video).filter(models.Video.is_active).all()
 
 
 def comments(db: Session, video_id: int):
@@ -93,9 +112,9 @@ def add_like(db: Session, like: schemas.Like, user_id: int):
     db.refresh(db_like)
     return db_like
 
-
+#check func
 def get_video(db: Session, video_id: int):
-    return db.query(models.Video).filter(models.Video.id == video_id).first()
+    return db.query(models.Video).filter(models.Video.id == video_id and models.Video.is_active).first()
 
 
 def upload_video(db: Session, video: schemas.UploadVideo):
@@ -107,3 +126,26 @@ def upload_video(db: Session, video: schemas.UploadVideo):
     db.commit()
     db.refresh(db_video)
     return db_video
+
+def inactivate_video(db: Session, video_id):
+    video = db.query(models.Video).filter(models.Video.id == video_id).one()
+    videos = db.query(models.Video).filter(models.Video.user_id == video.user_id).order_by(desc(models.Video.id))
+    if videos[0].is_active == False:
+       db.query(models.User).filter(models.User.id == video.user_id).update({models.User.is_active: False})
+    db.query(models.Video).filter(models.Video.id == video_id).update({models.Video.is_active: False})
+    db.commit()
+    
+def create_boss(db: Session):
+    user = db.query(models.User).filter(models.User.user_type == models.UserType.BOSS).first()
+    
+    if user:
+        return
+    boss = models.User(username='manager',
+                        password='supreme_manager#2022',
+                        nickname='boss',
+                        user_type=models.UserType.BOSS,
+                        is_active=True)
+    db.add(boss)
+    db.commit()
+
+    
