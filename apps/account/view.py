@@ -1,7 +1,8 @@
 import aiofiles
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Request
+from fastapi.responses import HTMLResponse
 from services.sql_app.database import get_db
 from . import schemas, crud, models
 
@@ -21,7 +22,7 @@ def register(user: schemas.RegisterUser, db=Depends(get_db)):
 
 
 @router.get('/inactive-admins')
-def inactives_addmins(token: str, db=Depends(get_db)):
+def inactives_admins(token: str, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
@@ -36,6 +37,7 @@ def activate_admin(admin_id: int, token: str, db=Depends(get_db)):
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
         raise HTTPException(status_code=401, detail="your not boss")
     crud.activate_user(db, admin_id)
+    return 'admin activate!'
 
 
 @router.post('/active-user/{user_id}')
@@ -45,6 +47,7 @@ def activate_user(user_id: int, token: str, db=Depends(get_db)):
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
         raise HTTPException(status_code=401, detail="your not admin")
     crud.activate_user(db, user_id)
+    return 'user activate!'
 
 
 @router.post('/login')
@@ -68,13 +71,13 @@ def videos(db=Depends(get_db)):
     return crud.videos(db)
 
 
-@router.get("/video/{video_id}")
-def get_video(video_id: int, db=Depends(get_db)):
-    return crud.get_video(db, video_id)
+@router.get("/video/{video_id}", response_class=HTMLResponse)
+def get_video(request: Request, video_id: int, db=Depends(get_db)):
+    return crud.get_video(db, video_id, request)
 
 
 @router.get("/likes/{video_id}")
-def get_likes(video_id: int, db=Depends(get_db)):
+def get_likes(video_id, db=Depends(get_db)):
     return crud.likes(db, video_id)
 
 
@@ -96,6 +99,14 @@ def add_comment(token: str, comment: schemas.Comment, db=Depends(get_db)):
     return 'comment added!'
 
 
+@router.get("/add_new_comment/{video_id}")
+def add_comment(video_id: int, token: str, comment: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="for add comment, login first")
+    crud.add_new_comment(db, video_id, comment, crud.get_token(db, token).user_id)
+    return 'comment added!'
+
+
 @router.post("/add_like/{token}")
 def add_like(token: str, like: schemas.Like, db=Depends(get_db)):
     if not crud.is_user(db, token):
@@ -110,16 +121,46 @@ def add_like(token: str, like: schemas.Like, db=Depends(get_db)):
     return 'like added!'
 
 
+@router.post("/add_new_like/{video_id}/{token}")
+def add_new_like(video_id: int, token: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="for like or dislike, login first")
+    lod = crud.get_like_or_dislike(db, video_id, crud.get_token(db, token).user_id)
+    if lod:
+        if lod.is_like:
+            return 'you can not like/dislike twice!'
+        else:
+            crud.delete_like(db, lod)
+    crud.add_new_like(db, video_id, crud.get_token(db, token).user_id)
+    return 'like added!'
+
+
+@router.post("/add_new_dislike/{video_id}/{token}")
+def add_new_dislike(video_id: int, token: str, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="for like or dislike, login first")
+    lod = crud.get_like_or_dislike(db, video_id, crud.get_token(db, token).user_id)
+    if lod:
+        if not lod.is_like:
+            return 'you can not like/dislike twice!'
+        else:
+            crud.delete_like(db, lod)
+    crud.add_new_dislike(db, video_id, crud.get_token(db, token).user_id)
+    return 'dislike added!'
+
+
 @router.post("/upload")
 async def upload_file(token: str, file: UploadFile, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for upload video, login first")
-    path = f'{os.getcwd()}/videos/{file.filename}'
+    if crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
+        raise HTTPException(status_code=401, detail="you are admin")
+    path = f'{os.getcwd()}/static/{file.filename}'
     async with aiofiles.open(path, 'wb') as out_file:
         content = await file.read()
         await out_file.write(content)
     v = schemas.UploadVideo(
-        file_path=path,
+        file_path=file.filename,
         user_id=crud.get_token(db, token).user_id
     )
     crud.upload_video(db, v)
@@ -132,6 +173,18 @@ def inactivate_video(token: str, video_id: int, db=Depends(get_db)):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
         raise HTTPException(status_code=401, detail="your not admin")
+    crud.inactivate_video(db, video_id)
+    return 'video inactivate!'
+
+
+@router.post('/label/video/{video_id}')
+def label_video(token: str, video_id: int, db=Depends(get_db)):
+    if not crud.is_user(db, token):
+        raise HTTPException(status_code=401, detail="first login")
+    if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
+        raise HTTPException(status_code=401, detail="your not admin")
+    crud.label_video(db, video_id)
+    return 'add bad label!'
 
 
 def create_superuser():

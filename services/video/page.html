@@ -4,7 +4,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deltion Live Streaming</title>
-    <link rel="stylesheet" href="style.css"></link>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body style="text-align:center;">  
@@ -12,7 +12,7 @@
     <br></br>
     <div>
     <video width="640" height="480" controls>
-        <source src="video.mp4" type="video/mp4">
+        <source src="{{ url_for('static', path=file_path) }}" type="video/mp4">
       Your browser does not support the video tag.
       </video>
     </div>
@@ -20,12 +20,11 @@
     <div class="wrapper" >
         <div class="like">
             <i onclick="like()" id="li" class="fas fa-thumbs-up"></i>
-            <p>250</p>
+            <p>{{ like_count }}</p>
         </div>
         <div class="dislike">
             <i onclick="dislike()" id="di" class="fas fa-thumbs-down"></i>
-            <p>250</p>
-            <!-- <i onclick="dislike()" id="di" class="fas fa-thumbs-down"></i> -->
+            <p>{{ dislike_count }}</p>
         </div>
     </div>
 
@@ -33,17 +32,25 @@
         function like(){
             document.getElementById("li").style.color = "blue"
             document.getElementById("di").style.color = "grey"
+            const form = document.getElementById('token').value;
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open( "POST", "/account/add_new_like/{{ video_id }}/" + form, false );
+            xmlHttp.send( null );
         }
         function dislike(){
             document.getElementById("li").style.color = "grey"
             document.getElementById("di").style.color = "red"
+            const form = document.getElementById('token').value;
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open( "POST", "/account/add_new_dislike/{{ video_id }}/" + form, false );
+            xmlHttp.send( null );
         }
     </script>
     <br></br>
     <div class="comments">
         <ul class="commentstitle" id="myList">Comments</ul>
         <script>
-            let data = ["Reydtguijoiotfred5ytyuhihgjiohuiytydrtuuhoiydyryghijhuftudhjoiiujkljkkhgfhsgfghnk,hdfghdhrsdgfhdesghthrfgjhuyiui;juiytyram", "Shyam", "Sita", "Gita"];
+            let data = [{{'`' + comment_list|join('`, `') + '`'}}];
 
             let list = document.getElementById("myList");
 
@@ -57,7 +64,8 @@
     </div>
     <br></br>
     <div>
-    <form action="/action_page.php" id="usrform">
+    <form action="/account/add_new_comment/{{ video_id }}" id="usrform">
+    <textarea class="list" name="token" id="token" form="usrform" style="height: 100; width: 700">Enter your token here...</textarea>
     <textarea class="list" name="comment" form="usrform" style="height: 100; width: 700">Enter your comment here...</textarea>
     <input type="submit">
     </form>

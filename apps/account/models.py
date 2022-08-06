@@ -36,6 +36,7 @@ class Video(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     file_path = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
+    bad_label = Column(Boolean, default=False)
 
 
 class Comment(Base):
