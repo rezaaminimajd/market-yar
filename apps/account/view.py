@@ -45,7 +45,9 @@ def activate_admin(admin_id: int, token: str, db=Depends(get_db)):
 
 
 @router.post('/active-user/{user_id}')
-def activate_user(user_id: int, token: str, db=Depends(get_db)):
+def activate_user(request: Request, user_id: int, token: str, db=Depends(get_db)):
+    if not check_proxy(request.headers):
+        raise HTTPException(status_code=403, detail="invalid hostname")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
