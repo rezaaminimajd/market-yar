@@ -50,7 +50,7 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler):
         sent = False
         try:
             url = 'http://{}:{}{}'.format(hostname, port, self.path)
-            content_len = int(self.headers.getheader('content-length', 0))
+            content_len = int(self.headers['content-length'] if self.headers['content-length'] else 0)
             post_body = self.rfile.read(content_len)
             req_header = self.parse_headers()
 
