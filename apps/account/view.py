@@ -12,6 +12,10 @@ router = APIRouter(
 )
 
 
+def check_proxy(header):
+    return header['host'] == '##proxy##admin##'
+
+
 @router.post('/register')
 def register(user: schemas.RegisterUser, db=Depends(get_db)):
     user_db = crud.get_user(db, user.username, user.password)
@@ -67,7 +71,8 @@ def logout(user: schemas.UserLogout, db=Depends(get_db)):
 
 
 @router.get("/videos")
-def videos(db=Depends(get_db)):
+def videos(request: Request, db=Depends(get_db)):
+    print(request.headers)
     return crud.videos(db)
 
 
