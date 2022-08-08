@@ -9,12 +9,15 @@ greenlet==1.1.2
 h11==0.13.0
 idna==3.3
 Jinja2==3.1.2
+limits==1.6
 MarkupSafe==2.1.1
 psycopg2-binary==2.9.3
 pydantic==1.9.1
 python-multipart==0.0.5
+redis==3.5.3
 requests==2.28.1
 six==1.16.0
+slowapi==0.1.5
 sniffio==1.2.0
 SQLAlchemy==1.4.39
 starlette==0.19.1

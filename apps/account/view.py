@@ -2,6 +2,8 @@ import aiofiles
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Request
+from slowapi.util import get_remote_address
+from slowapi import Limiter
 from fastapi.responses import HTMLResponse
 from services.sql_app.database import get_db
 from . import schemas, crud, models
@@ -10,6 +12,7 @@ router = APIRouter(
     prefix='/account',
     tags=['account']
 )
+limiter = Limiter(key_func=get_remote_address)
 
 
 def check_proxy(header):
