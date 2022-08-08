@@ -26,7 +26,9 @@ def register(user: schemas.RegisterUser, db=Depends(get_db)):
 
 
 @router.get('/inactive-admins')
-def inactives_admins(token: str, db=Depends(get_db)):
+def inactives_admins(request: Request, token: str, db=Depends(get_db)):
+    if not check_proxy(request.headers):
+        raise HTTPException(status_code=403, detail="invalid hostname")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
@@ -34,8 +36,10 @@ def inactives_admins(token: str, db=Depends(get_db)):
     return crud.get_inactive_admins(db)
 
 
-@router.post('/active-admin/{admin_id}')
-def activate_admin(admin_id: int, token: str, db=Depends(get_db)):
+@router.post('/activate-admin/{admin_id}')
+def activate_admin(request: Request, admin_id: int, token: str, db=Depends(get_db)):
+    if not check_proxy(request.headers):
+        raise HTTPException(status_code=403, detail="invalid hostname")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
@@ -175,7 +179,9 @@ async def upload_file(token: str, file: UploadFile, db=Depends(get_db)):
 
 
 @router.post("/inactivate/video/{video_id}")
-def inactivate_video(token: str, video_id: int, db=Depends(get_db)):
+def inactivate_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
+    if not check_proxy(request.headers):
+        raise HTTPException(status_code=403, detail="invalid hostname")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
@@ -185,7 +191,9 @@ def inactivate_video(token: str, video_id: int, db=Depends(get_db)):
 
 
 @router.post('/label/video/{video_id}')
-def label_video(token: str, video_id: int, db=Depends(get_db)):
+def label_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
+    if not check_proxy(request.headers):
+        raise HTTPException(status_code=403, detail="invalid hostname")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
