@@ -9,7 +9,6 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 
-
 account_models.Base.metadata.create_all(bind=engine)
 ticket_models.Base.metadata.create_all(bind=engine)
 
@@ -28,6 +27,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(account_view.router)
 app.include_router(ticket_view.router)
+
+
+@app.get("/")
+def healthy_check():
+    return 'I am healthy'
+
 
 if __name__ == '__main__':
     print("Starting Application...")
