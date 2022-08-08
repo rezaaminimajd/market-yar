@@ -4,12 +4,19 @@ from apps.account import models as account_models, view as account_view
 from apps.ticket import models as ticket_models, view as ticket_view
 from services.sql_app.database import engine
 from fastapi.staticfiles import StaticFiles
+from starlette_validation_uploadfile import ValidateUploadFileMiddleware
+
 
 account_models.Base.metadata.create_all(bind=engine)
 ticket_models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(
+    ValidateUploadFileMiddleware,
+    app_path='/account/upload',
+    max_size=52428800
+)
 
 app.include_router(account_view.router)
 app.include_router(ticket_view.router)
