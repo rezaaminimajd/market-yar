@@ -3,6 +3,8 @@ from sqlalchemy import null
 from . import models, schemas
 from apps.account import models as account_models
 
+from apps import ticket
+
 
 def create_ticket(db: Session, new_ticket_request: schemas.New_ticket, user_id: int):
     user = db.query(account_models.User).filter(account_models.User.id == user_id).one()
@@ -13,17 +15,21 @@ def create_ticket(db: Session, new_ticket_request: schemas.New_ticket, user_id: 
 
 
 def get_ticket(db: Session, user_id: int):
+    tickets = []
     user = db.query(account_models.User).filter(account_models.User.id == user_id).one()
     if user.user_type == account_models.UserType.NORMAL:
-        return get_user_tickets(db, user_id)
+        tickets += get_user_tickets(db, user_id)
+    return tickets
 
 
 def get_ticket_admin(db: Session, user_id: int):
+    tickets = []
     user = db.query(account_models.User).filter(account_models.User.id == user_id).one()
     if user.user_type == account_models.UserType.ADMIN:
-        return get_addmin_tickets(db, user_id)
+        tickets += get_addmin_tickets(db, user_id)
     elif user.user_type == account_models.UserType.BOSS:
-        return get_boss_tickets(db, user_id)
+        tickets += get_boss_tickets(db, user_id)
+    return tickets
 
 
 
