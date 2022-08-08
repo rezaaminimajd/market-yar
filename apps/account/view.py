@@ -1,7 +1,7 @@
 import aiofiles
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Request
 from slowapi.util import get_remote_address
 from slowapi import Limiter
 from fastapi.responses import HTMLResponse
@@ -88,7 +88,6 @@ def logout(request: Request, user: schemas.UserLogout, db=Depends(get_db)):
 @router.get("/videos")
 @limiter.limit("5/minute")
 def videos(request: Request, db=Depends(get_db)):
-    print(request.headers)
     return crud.videos(db)
 
 
@@ -105,6 +104,7 @@ def get_likes(request: Request, video_id, db=Depends(get_db)):
 
 
 @router.get("/dislikes/{video_id}")
+@limiter.limit("5/minute")
 def get_dislikes(request: Request, video_id: int, db=Depends(get_db)):
     return crud.dislikes(db, video_id)
 

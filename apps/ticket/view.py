@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi.util import get_remote_address
 from slowapi import Limiter
 from services.sql_app.database import get_db
@@ -10,7 +10,6 @@ router = APIRouter(
     tags=['ticket']
 )
 limiter = Limiter(key_func=get_remote_address)
-
 
 
 def check_proxy(header):
