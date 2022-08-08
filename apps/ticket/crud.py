@@ -35,6 +35,8 @@ def get_boss_tickets(db, user_id: int):
     all_tickets = []
     all_tickets += db.query(models.Ticket).filter(
         models.Ticket.creator_type == account_models.UserType.ADMIN, models.Ticket.parent_ticket_id == null()).all()
+    all_tickets += db.query(models.Ticket).filter(
+        models.Ticket.creator_type == account_models.UserType.BOSS).all()
     return all_tickets
 
 
