@@ -33,7 +33,7 @@ def register(request: Request, user: schemas.RegisterUser, db=Depends(get_db)):
 @limiter.limit("150/minute")
 def inactives_admins(request: Request, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
-        raise HTTPException(status_code=403, detail="invalid hostname")
+        raise HTTPException(status_code=403, detail="use proxy!")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
@@ -45,7 +45,7 @@ def inactives_admins(request: Request, token: str, db=Depends(get_db)):
 @limiter.limit("150/minute")
 def activate_admin(request: Request, admin_id: int, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
-        raise HTTPException(status_code=403, detail="invalid hostname")
+        raise HTTPException(status_code=403, detail="use proxy!")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.BOSS):
@@ -58,7 +58,7 @@ def activate_admin(request: Request, admin_id: int, token: str, db=Depends(get_d
 @limiter.limit("150/minute")
 def activate_user(request: Request, user_id: int, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
-        raise HTTPException(status_code=403, detail="invalid hostname")
+        raise HTTPException(status_code=403, detail="use proxy!")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
@@ -201,7 +201,7 @@ async def upload_file(request: Request, token: str, file: UploadFile, db=Depends
 @limiter.limit("150/minute")
 def inactivate_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
     if not check_proxy(request.headers):
-        raise HTTPException(status_code=403, detail="invalid hostname")
+        raise HTTPException(status_code=403, detail="use proxy!")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
@@ -214,7 +214,7 @@ def inactivate_video(request: Request, token: str, video_id: int, db=Depends(get
 @limiter.limit("150/minute")
 def label_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
     if not check_proxy(request.headers):
-        raise HTTPException(status_code=403, detail="invalid hostname")
+        raise HTTPException(status_code=403, detail="use proxy!")
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="first login")
     if not crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):

@@ -11,7 +11,6 @@ def create_ticket(db: Session, new_ticket_request: schemas.New_ticket, user_id: 
     ticket = models.Ticket(message=new_ticket_request.message, creator_id=user_id, creator_type=user.user_type)
     db.add(ticket)
     db.commit()
-    "done"
 
 
 def get_ticket(db: Session, user_id: int):
@@ -30,7 +29,6 @@ def get_ticket_admin(db: Session, user_id: int):
     elif user.user_type == account_models.UserType.BOSS:
         tickets += get_boss_tickets(db, user_id)
     return tickets
-
 
 
 def get_boss_tickets(db, user_id: int):
@@ -62,11 +60,12 @@ def answer(db: Session, answer: schemas.Answer_ticket, user_id: int):
     for ticket in tickets:
         if ticket.id == answer.parent_ticket_id:
             ticket = models.Ticket(message=answer.message, creator_id=user_id, parent_ticket_id=answer.parent_ticket_id,
-                           creator_type=user.user_type)
+                                   creator_type=user.user_type)
             db.add(ticket)
             db.commit()
             return "done"
     return "Access Denied"
+
 
 def answer_admin(db: Session, answer: schemas.Answer_ticket, user_id: int):
     user = db.query(account_models.User).filter(account_models.User.id == user_id).one()
@@ -74,7 +73,7 @@ def answer_admin(db: Session, answer: schemas.Answer_ticket, user_id: int):
     for ticket in tickets:
         if ticket.id == answer.parent_ticket_id:
             ticket = models.Ticket(message=answer.message, creator_id=user_id, parent_ticket_id=answer.parent_ticket_id,
-                           creator_type=user.user_type)
+                                   creator_type=user.user_type)
             db.add(ticket)
             db.commit()
             return "done"
@@ -90,6 +89,7 @@ def set_status(db: Session, new_status: schemas.New_status, user_id: int):
             db.commit()
             return "done"
     return "Access Denied"
+
 
 def set_status_admin(db: Session, new_status: schemas.New_status, user_id: int):
     tickets = get_ticket_admin(db, user_id)
