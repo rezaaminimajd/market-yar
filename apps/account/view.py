@@ -20,7 +20,8 @@ def check_proxy(header):
 
 
 @router.post('/register')
-def register(user: schemas.RegisterUser, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, user: schemas.RegisterUser, db=Depends(get_db)):
     user_db = crud.get_user(db, user.username, user.password)
     if user_db:
         raise HTTPException(status_code=400, detail="user already registered")
@@ -29,6 +30,7 @@ def register(user: schemas.RegisterUser, db=Depends(get_db)):
 
 
 @router.get('/inactive-admins')
+@limiter.limit("5/minute")
 def inactives_admins(request: Request, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
         raise HTTPException(status_code=403, detail="invalid hostname")
@@ -40,6 +42,7 @@ def inactives_admins(request: Request, token: str, db=Depends(get_db)):
 
 
 @router.post('/activate-admin/{admin_id}')
+@limiter.limit("5/minute")
 def activate_admin(request: Request, admin_id: int, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
         raise HTTPException(status_code=403, detail="invalid hostname")
@@ -52,6 +55,7 @@ def activate_admin(request: Request, admin_id: int, token: str, db=Depends(get_d
 
 
 @router.post('/active-user/{user_id}')
+@limiter.limit("5/minute")
 def activate_user(request: Request, user_id: int, token: str, db=Depends(get_db)):
     if not check_proxy(request.headers):
         raise HTTPException(status_code=403, detail="invalid hostname")
@@ -64,7 +68,8 @@ def activate_user(request: Request, user_id: int, token: str, db=Depends(get_db)
 
 
 @router.post('/login')
-def login(user: schemas.UserLogin, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, user: schemas.UserLogin, db=Depends(get_db)):
     user_login = crud.get_user(db, username=user.username, password=user.password)
     if not user_login or not user_login.is_active:
         raise HTTPException(status_code=400, detail="user not exist! or not active")
@@ -72,7 +77,8 @@ def login(user: schemas.UserLogin, db=Depends(get_db)):
 
 
 @router.post('/logout')
-def logout(user: schemas.UserLogout, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def logout(request: Request, user: schemas.UserLogout, db=Depends(get_db)):
     user_logout = crud.get_token(db, token=user.token)
     if not user_logout:
         raise HTTPException(status_code=400, detail="token not exist!")
@@ -80,33 +86,38 @@ def logout(user: schemas.UserLogout, db=Depends(get_db)):
 
 
 @router.get("/videos")
+@limiter.limit("5/minute")
 def videos(request: Request, db=Depends(get_db)):
     print(request.headers)
     return crud.videos(db)
 
 
 @router.get("/video/{video_id}", response_class=HTMLResponse)
+@limiter.limit("5/minute")
 def get_video(request: Request, video_id: int, db=Depends(get_db)):
     return crud.get_video(db, video_id, request)
 
 
 @router.get("/likes/{video_id}")
-def get_likes(video_id, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def get_likes(request: Request, video_id, db=Depends(get_db)):
     return crud.likes(db, video_id)
 
 
 @router.get("/dislikes/{video_id}")
-def get_dislikes(video_id: int, db=Depends(get_db)):
+def get_dislikes(request: Request, video_id: int, db=Depends(get_db)):
     return crud.dislikes(db, video_id)
 
 
 @router.get("/comments/{video_id}")
-def get_comments(video_id: int, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def get_comments(request: Request, video_id: int, db=Depends(get_db)):
     return crud.comments(db, video_id)
 
 
 @router.post("/add_comment/{token}")
-def add_comment(token: str, comment: schemas.Comment, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def add_comment(request: Request, token: str, comment: schemas.Comment, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for add comment, login first")
     crud.add_comment(db, comment, crud.get_token(db, token).user_id)
@@ -114,7 +125,8 @@ def add_comment(token: str, comment: schemas.Comment, db=Depends(get_db)):
 
 
 @router.get("/add_new_comment/{video_id}")
-def add_comment(video_id: int, token: str, comment: str, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def add_comment(request: Request, video_id: int, token: str, comment: str, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for add comment, login first")
     crud.add_new_comment(db, video_id, comment, crud.get_token(db, token).user_id)
@@ -122,7 +134,8 @@ def add_comment(video_id: int, token: str, comment: str, db=Depends(get_db)):
 
 
 @router.post("/add_like/{token}")
-def add_like(token: str, like: schemas.Like, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def add_like(request: Request, token: str, like: schemas.Like, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for like or dislike, login first")
     lod = crud.get_like_or_dislike(db, like.video_id, crud.get_token(db, token).user_id)
@@ -136,7 +149,8 @@ def add_like(token: str, like: schemas.Like, db=Depends(get_db)):
 
 
 @router.post("/add_new_like/{video_id}/{token}")
-def add_new_like(video_id: int, token: str, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def add_new_like(request: Request, video_id: int, token: str, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for like or dislike, login first")
     lod = crud.get_like_or_dislike(db, video_id, crud.get_token(db, token).user_id)
@@ -150,7 +164,8 @@ def add_new_like(video_id: int, token: str, db=Depends(get_db)):
 
 
 @router.post("/add_new_dislike/{video_id}/{token}")
-def add_new_dislike(video_id: int, token: str, db=Depends(get_db)):
+@limiter.limit("5/minute")
+def add_new_dislike(request: Request, video_id: int, token: str, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for like or dislike, login first")
     lod = crud.get_like_or_dislike(db, video_id, crud.get_token(db, token).user_id)
@@ -164,7 +179,8 @@ def add_new_dislike(video_id: int, token: str, db=Depends(get_db)):
 
 
 @router.post("/upload")
-async def upload_file(token: str, file: UploadFile, db=Depends(get_db)):
+@limiter.limit("5/minute")
+async def upload_file(request: Request, token: str, file: UploadFile, db=Depends(get_db)):
     if not crud.is_user(db, token):
         raise HTTPException(status_code=401, detail="for upload video, login first")
     if crud.check_type(db, crud.get_token(db, token).user_id, models.UserType.ADMIN):
@@ -182,6 +198,7 @@ async def upload_file(token: str, file: UploadFile, db=Depends(get_db)):
 
 
 @router.post("/inactivate/video/{video_id}")
+@limiter.limit("5/minute")
 def inactivate_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
     if not check_proxy(request.headers):
         raise HTTPException(status_code=403, detail="invalid hostname")
@@ -194,6 +211,7 @@ def inactivate_video(request: Request, token: str, video_id: int, db=Depends(get
 
 
 @router.post('/label/video/{video_id}')
+@limiter.limit("5/minute")
 def label_video(request: Request, token: str, video_id: int, db=Depends(get_db)):
     if not check_proxy(request.headers):
         raise HTTPException(status_code=403, detail="invalid hostname")
