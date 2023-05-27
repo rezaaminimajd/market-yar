@@ -7,7 +7,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    command: ["python3", "main.py"]
+#    command: ["python3", "main.py"]
+    restart: always
 
   db:
     image: postgres:13-alpine

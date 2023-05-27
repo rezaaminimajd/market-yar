@@ -13,6 +13,8 @@ class CategoryAreaStatistics(Base):
     __tablename__ = "category_area_statistic"
 
     id = Column(Integer, primary_key=True, index=True)
+    category_id = Column(Integer, ForeignKey('category.id'))
+    city_id = Column(Integer, ForeignKey('city.id'))
 
 
 class Category(Base):
@@ -20,7 +22,6 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    category_area_id = Column(Integer, ForeignKey('category_area_statistic.id'))
 
 
 class City(Base):
@@ -28,11 +29,10 @@ class City(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    category_area_id = Column(Integer, ForeignKey('category_area_statistic.id'))
 
 
-class Statics(Base):
-    __tablename__ = "statistic"
+class Statistics(Base):
+    __tablename__ = "statistics"
 
     id = Column(Integer, primary_key=True, index=True)
     rank = Column(Integer, nullable=False)
